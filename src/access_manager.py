@@ -19,13 +19,13 @@ class AccessManager:
 
         # load usage info
         (filename, _) = self.__get_usage_filename_and_key("chat")
-        if os.path.exists("./usage/" + filename):
-            with open("./usage/" + filename) as f:
+        if os.path.exists(f"./usage/{filename}"):
+            with open(f"./usage/{filename}") as f:
                 self.user_chat_usage_dict = json.load(f)
 
         (filename, _) = self.__get_usage_filename_and_key("image")
-        if os.path.exists("./usage/" + filename):
-            with open("./usage/" + filename) as f:
+        if os.path.exists(f"./usage/{filename}"):
+            with open(f"./usage/{filename}") as f:
                 self.user_image_generation_usage_dict = json.load(f)
 
     # generate filename & dict key (based on datetime)
@@ -42,12 +42,12 @@ class AccessManager:
     def __update_dict(self, chatORimage):
         (filename, now) = self.__get_usage_filename_and_key(chatORimage)
         # new month
-        if not os.path.exists("./usage/" + filename):
-            if chatORimage == "image":
-                self.user_image_generation_usage_dict = {}
-            elif chatORimage == "chat":
+        if not os.path.exists(f"./usage/{filename}"):
+            if chatORimage == "chat":
                 self.user_chat_usage_dict = {}
 
+            elif chatORimage == "image":
+                self.user_image_generation_usage_dict = {}
         # new day
         if chatORimage == "image" and now not in self.user_image_generation_usage_dict:
             self.user_image_generation_usage_dict[now] = {}
@@ -76,14 +76,14 @@ class AccessManager:
             if user not in self.user_image_generation_usage_dict[now]:
                 self.user_image_generation_usage_dict[now][user] = 0
             self.user_image_generation_usage_dict[now][user] += num
-            with open("./usage/" + filename, "w") as f:
+            with open(f"./usage/{filename}", "w") as f:
                 json.dump(self.user_image_generation_usage_dict, f)
 
         elif chatORimage == "chat":
             if user not in self.user_chat_usage_dict[now]:
                 self.user_chat_usage_dict[now][user] = 0
             self.user_chat_usage_dict[now][user] += num
-            with open("./usage/" + filename, "w") as f:
+            with open(f"./usage/{filename}", "w") as f:
                 json.dump(self.user_chat_usage_dict, f)
 
     # only check user in allowed_list or not
@@ -115,12 +115,21 @@ class AccessManager:
 
         if num + used_num > self.config_dict["image_generation_limit_per_day"]:
             # print("sorry at over limit generation.")
-            return (False, "Sorry. You have generated " + str(used_num) + " pictures today and the limit is "
-                    + str(self.config_dict["image_generation_limit_per_day"]) + " per day.")
+            return False, (
+                (
+                    f"Sorry. You have generated {str(used_num)} pictures today and the limit is "
+                    + str(self.config_dict["image_generation_limit_per_day"])
+                )
+                + " per day."
+            )
         else:
-            return (True, "You have used " + str(used_num + num) + " / " +
-                    str(self.config_dict["image_generation_limit_per_day"]) +
-                    " times.")
+            return True, (
+                (
+                    f"You have used {str(used_num + num)} / "
+                    + str(self.config_dict["image_generation_limit_per_day"])
+                )
+                + " times."
+            )
 
 
 if __name__ == "__main__":
