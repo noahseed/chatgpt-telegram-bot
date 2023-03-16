@@ -81,7 +81,7 @@ class TelegramMessageParser:
 
 
         # if group chat
-        if update.effective_chat.type == "group" or update.effective_chat.type == "supergroup":
+        if update.effective_chat.type in ["group", "supergroup"]:
             return
 
         # get message
@@ -145,7 +145,7 @@ class TelegramMessageParser:
     # voice message in private chat, speech to text with Whisper API and process with ChatGPT
     async def chat_voice(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         # check if it's a private chat
-        if not update.effective_chat.type == "private":
+        if update.effective_chat.type != "private":
             return
 
         # check if user is allowed to use this bot
@@ -167,27 +167,27 @@ class TelegramMessageParser:
         try:
             file_id = update.effective_message.voice.file_id
             new_file = await context.bot.get_file(file_id)
-            await new_file.download_to_drive(file_id + ".ogg")
+            await new_file.download_to_drive(f"{file_id}.ogg")
 
-            file_size = os.path.getsize(file_id + ".ogg") / 1000
+            file_size = os.path.getsize(f"{file_id}.ogg") / 1000
             # # if < 200kB, convert to wav and send to openai
             # if file_size > 50:
             #     await update.message.reply_text("Sorry, the voice message is too long.")
             #     return
 
             subprocess.call(
-                ['ffmpeg', '-i', file_id + '.ogg', file_id + '.wav'],
-                stdout=subprocess.DEVNULL, 
-                stderr=subprocess.DEVNULL
-                )
+                ['ffmpeg', '-i', f'{file_id}.ogg', f'{file_id}.wav'],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
 
-            with open(file_id + ".wav", "rb") as audio_file:
+            with open(f"{file_id}.wav", "rb") as audio_file:
                 transcript = self.message_manager.get_transcript(
                     str(update.effective_user.id), 
                     audio_file
                     )
-            os.remove(file_id + ".ogg")
-            os.remove(file_id + ".wav")
+            os.remove(f"{file_id}.ogg")
+            os.remove(f"{file_id}.wav")
 
         except Exception as e:
             await update.message.reply_text("Sorry, something went wrong. Please try again later.")
@@ -240,30 +240,37 @@ class TelegramMessageParser:
 
         # check if user is allowed to use this bot
         allowed, _ = self.access_manager.check_user_allowed(str(update.effective_user.id))
-        if not allowed:
-            results = [
+        results = (
+            [
                 InlineQueryResultArticle(
-                    id = str(uuid4()),
-                    title = "Sorry😢",
-                    description = "Sorry, you are not allowed to use this bot.",
-                    input_message_content = InputTextMessageContent("Sorry, you are not allowed to use this bot.")
-                )
-            ]
-        else:
-            results = [
-                InlineQueryResultArticle(
-                    id = str(uuid4()),
-                    title = "Chat💬",
-                    description = "Get a response from ChatGPT (It's a beta feature, no context ability yet)",
-                    input_message_content = InputTextMessageContent(query),
-                    reply_markup = InlineKeyboardMarkup(
+                    id=str(uuid4()),
+                    title="Chat💬",
+                    description="Get a response from ChatGPT (It's a beta feature, no context ability yet)",
+                    input_message_content=InputTextMessageContent(query),
+                    reply_markup=InlineKeyboardMarkup(
                         [
-                            [InlineKeyboardButton("🐱 I'm thinking...", switch_inline_query_current_chat = query)]
+                            [
+                                InlineKeyboardButton(
+                                    "🐱 I'm thinking...",
+                                    switch_inline_query_current_chat=query,
+                                )
+                            ]
                         ]
-                    )
+                    ),
                 )
             ]
-
+            if allowed
+            else [
+                InlineQueryResultArticle(
+                    id=str(uuid4()),
+                    title="Sorry😢",
+                    description="Sorry, you are not allowed to use this bot.",
+                    input_message_content=InputTextMessageContent(
+                        "Sorry, you are not allowed to use this bot."
+                    ),
+                )
+            ]
+        )
         # await update.inline_query.answer(results, cache_time=0, is_personal=True, switch_pm_text="Chat Privately 🤫", switch_pm_parameter="start")
         await update.inline_query.answer(results, cache_time=0, is_personal=True)
     
@@ -306,11 +313,14 @@ class TelegramMessageParser:
         # get message
         message = update.effective_message.text
         # group chat without @username
-        if (update.effective_chat.type == "group" or update.effective_chat.type == "supergroup") and not ("@" + context.bot.username) in message:
+        if (
+            update.effective_chat.type in ["group", "supergroup"]
+            and f"@{context.bot.username}" not in message
+        ):
             return
         # remove @username
-        if (not message is None) and "@" + context.bot.username in message:
-            message = message.replace("@" + context.bot.username, "")
+        if message is not None and f"@{context.bot.username}" in message:
+            message = message.replace(f"@{context.bot.username}", "")
 
         # check if user is allowed to use this bot
         allowed, acl_message = self.access_manager.check_user_allowed(str(update.effective_user.id))
