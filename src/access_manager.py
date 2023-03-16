@@ -96,7 +96,7 @@ class AccessManager:
             return (True, "")
         else:
             # print("sorry at unallowed chat.")
-            return (False, "Sorry, you are not allowed to use this bot. Contact the bot owner for more information.")
+            return (False, "Désolé, vous n'êtes pas autorisé à utiliser ce bot. Contactez le propriétaire du bot pour plus d'informations.")
 
     # check user in allowed_list or not & check image limit
     def check_image_generation_allowed(self, userid, num):
@@ -108,19 +108,19 @@ class AccessManager:
             return self.__check_image_generation_limit(userid, num)
         else:
             # print("sorry at unallowed image generation.")
-            return (False, "Sorry, you are not allowed to use this bot. Contact the bot owner for more information.")
+            return (False, "Désolé, vous n'êtes pas autorisé à utiliser ce bot. Contactez le propriétaire du bot pour plus d'informations.")
 
     def __check_image_generation_limit(self, userid, num):
         used_num = self.__get_image_generation_usage(userid)
 
         if num + used_num > self.config_dict["image_generation_limit_per_day"]:
             # print("sorry at over limit generation.")
-            return (False, "Sorry. You have generated " + str(used_num) + " pictures today and the limit is "
-                    + str(self.config_dict["image_generation_limit_per_day"]) + " per day.")
+            return (False, "Désolé. Vous avez généré " + str(used_num) + " photos aujourd'hui et la limite est "
+                    + str(self.config_dict["image_generation_limit_per_day"]) + " par jour.")
         else:
-            return (True, "You have used " + str(used_num + num) + " / " +
+            return (True, "Vous avez utilisé " + str(used_num + num) + " / " +
                     str(self.config_dict["image_generation_limit_per_day"]) +
-                    " times.")
+                    " fois.")
 
 
 if __name__ == "__main__":

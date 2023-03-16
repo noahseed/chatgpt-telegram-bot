@@ -13,7 +13,7 @@ class MessageManager:
     config_dict = {}
     openai_parser = None
     access_manager = None
-    
+
     def __init__(self, access_manager):
         self.openai_parser = OpenAIParser()
         self.access_manager = access_manager
@@ -34,7 +34,7 @@ class MessageManager:
             self.userDict[id] = ChatSession(t, message)
         else:
             self.userDict[id].update(t, message, "user")
-        
+
         # send user info for statistics
         (answer, usage) = self.__sendMessage(
             user, self.userDict[id].messageList)
@@ -55,7 +55,7 @@ class MessageManager:
             super_users = json.load(f)["super_users"]
         if user in super_users:
             url, _ = self.openai_parser.image_generation(user, prompt)
-            return url, "Hey boss, it's on your account. 💰"
+            return url, "Hé patron, c'est sur votre compte. 💰"
         ############################
 
         (permission, clue) = self.access_manager.check_image_generation_allowed(user, num)
@@ -81,8 +81,8 @@ class MessageManager:
     def __sendMessage(self, user, messageList):
         ans = self.openai_parser.get_response(user, messageList)
         return ans
-    
-    
+
+
 if __name__ == "__main__":
     acm = AccessManager()
     msm = MessageManager(acm)

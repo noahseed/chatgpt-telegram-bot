@@ -30,19 +30,25 @@ class OpenAIParser:
     def _get_single_response(self, message):
         response = openai.ChatCompletion.create(model = "gpt-3.5-turbo",
                                             messages = [
-                                                {"role": "system", "content": "You are a helpful assistant"},
+                                                {"role": "system", "content": "Tu es un assistant virtuel utile, tu t'appelles TynnieBot. Ton rôle est d'aider "
+                                                 "les bénévoles de l'ONG Alliances Célestes Internationales (https://www.alliances-celestes-internationales.com/) "
+						 "ainsi que de sa filiale française, l'ONG Alliances Célestes France (https://www.alliances-celestes.com/Accueil/). "
+						 "Ces deux sites web sont ta principale source d'informations, base tes réponses sur leur contenu."},
                                                 {"role": "user", "content": message}
                                             ])
         return response["choices"][0]["message"]["content"]
-    
+
     def get_response(self, userid, context_messages):
-        context_messages.insert(0, {"role": "system", "content": "You are a helpful assistant"})
+        context_messages.insert(0, {"role": "system", "content": "Tu es un assistant virtuel utile, tu t'appelles TynnieBot. Ton rôle est d'aider "
+                                    "les bénévoles de l'ONG Alliances Célestes Internationales (https://www.alliances-celestes-internationales.com/) "
+                                    "ainsi que de sa filiale française, l'ONG Alliances Célestes France (https://www.alliances-celestes.com/Accueil/). "
+                                    "Ces deux sites web sont ta principale source d'informations, base tes réponses sur leur contenu."})
         try:
             response = openai.ChatCompletion.create(model = "gpt-3.5-turbo",
                                                 messages = context_messages)
             return (response["choices"][0]["message"]["content"], response["usage"]["total_tokens"])
         except Exception as e:
-            return (str(e) + "\nSorry, I am not feeling well. Please try again.", 0)
+            return (str(e) + "\nDésolé, je ne me sens pas bien. Veuillez réessayer.", 0)
 
     def speech_to_text(self, userid, audio_file):
         # transcript = openai.Audio.transcribe("whisper-1", audio_file, language="zh")
@@ -60,4 +66,4 @@ class OpenAIParser:
 if __name__ == "__main__":
     openai_parser = OpenAIParser()
     # print(openai_parser._get_single_response("Tell me a joke."))
-    print(openai_parser.get_response("123", [{"role": "user", "content": "Tell me a joke."}]))
+    print(openai_parser.get_response("123", [{"role": "user", "content": "Raconte moi une blague."}]))
